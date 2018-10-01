@@ -1,0 +1,73 @@
+﻿
+@{
+    ViewBag.Title = "Demo";
+
+}
+@using TwitterSearch
+@{  
+
+    var mm = System.Web.HttpContext.Current.Application["demo"];
+    DemoI nn = (DemoI)mm;
+
+}
+<head>
+    <link rel="stylesheet" type="text/css" href="~/Content/radioBox.css">
+</head>
+<P style="font-size:large; ">Welcome!</p>
+<div id="links" style="font-family:'Times New Roman', Times, serif; font-size:20; color:#c51a78;">
+@Html.ActionLink("Create new search", "NewSearch", "Search")
+@Html.ActionLink("Analyze", "AnalyzeDemo", "Search")
+</div>
+<form id="allSearches" name="f" action="" method="post" >
+    
+
+    <div class="container">
+        <h2>Running searches:</h2>
+        <ul>
+            @{  String ms = "";
+                int i = 0;
+                foreach (TwitterSearchI s in nn.getRunningSearches())
+                {
+                    i++;
+                    var encodedHtml = HttpContext.Current.Server.HtmlEncode(s.searchInfomation.searchTitle );
+                    String m = "option" + i;
+                    ms += (" <li>") +
+                    ("<input type=\"radio\" id=\"" + m + "\"  value=\"" + s.searchInfomation.searchId + "\" " + " name=\"searchSelector\">") +
+                   ("<label for=\"" + m + "\">" + encodedHtml  + "</label>") +
+                   (" <div class=\"check\"></div>") + ("</li>");
+
+                }
+                WriteLiteral(ms);
+            }
+        </ul>
+        <input type="button" value="View" onclick="view()" />
+        <input type="button" value="Delete" onclick="deletef()" />  
+        <script>
+            function checkSelected() {
+                var m = document.getElementsByName("searchSelector");
+                if (m == null || m == "")
+                    return false;
+                for (var k = 0; k < m.length; k++) {
+                    if (m[k].checked) {
+                       return true;
+                    }
+                }
+                return false;
+            }
+            function view() {
+                if (checkSelected()) {
+                    document.f.action = '/Search/ViewSearch';
+                    document.f.submit();
+                }
+            }
+            function deletef() {
+                if (checkSelected()) {
+                    document.f.action = '/Search/Delete';
+                    document.f.submit();
+                }
+            }
+        </script>
+    </div>
+   
+</form>
+

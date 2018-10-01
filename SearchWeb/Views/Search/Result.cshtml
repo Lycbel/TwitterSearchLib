@@ -1,0 +1,27 @@
+﻿@{
+    Layout = "~/Views/Shared/SearchOut.cshtml";
+}
+@using TwitterSearch;
+@using  Tweetinvi.Models;
+@{
+    ViewBag.Title = "Result";
+
+
+    var mm = System.Web.HttpContext.Current.Application["demo"];
+    DemoI nn = (DemoI)mm;
+    int id = ViewBag.searchId;
+    TwitterSearchI ts = nn.getSearch(id);
+}
+
+@{ 
+    int i = 0;
+    foreach(ITweet d in ts.getTweets())
+    {
+        Write("<label> "+d.Text+"</label>");
+        if (i++ > 98)
+        {
+            break;
+        }
+    }
+}
+@Html.ActionLink("ruturn demo", "Demo", "Search");

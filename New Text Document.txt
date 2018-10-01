@@ -1,0 +1,51 @@
+create table search(
+searchId long auto_increment primary key,
+searchTitle char(60),
+deleted int(2),
+searchStatus int(3),
+include varchar(200),
+exclude varchar(200),
+startDate date,
+enDate date,
+firstTwitterDate date,
+lastTwitterDate date,
+lastMaxTwitterId long
+);
+
+create table demo(
+algorithmNumber int(5)
+);
+
+create table tweets(
+realTwitterId long auto_increment primary key,
+twitterId long,
+searchId int(10),
+userScreenName varchar(100),
+userId long,
+content varchar(500),
+createAt date,
+profileLocation varchar(100),
+PlaceLa1 double,
+PlaceLo1 double,
+PlaceLa2 double,
+PlaceLo2 double,
+PlaceLa3 double,
+PlaceLo3 double,
+PlaceLa4 double,
+PlaceLo4 double,
+La0 double,
+Lo0 double,
+city0 varchar(30),
+state0 varchar (30),
+country0 varchar (30)
+
+);
+
+create table algorithm(
+algorithmId int(10),
+algorithmName varchar(30),
+lastMaxId long
+);
+
+
+

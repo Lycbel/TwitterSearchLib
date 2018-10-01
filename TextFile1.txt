@@ -1,0 +1,60 @@
+
+drop database  if exists test;
+
+create database test;
+use test;
+create table search(
+searchId int auto_increment primary key,
+searchTitle char(60),
+deleted TINYINT(1),
+searchStatus int,
+include varchar(200),
+exclude varchar(200),
+startDate datetime,
+endDate datetime,
+firstTwitterDate datetime,
+tempLastTwitterDate datetime,
+tempLastTwitterId BIGINT,
+finishedLastTwitterDate datetime,
+finishedLastTwitterId BIGINT
+);
+
+create table demo(
+algorithmNumber int
+);
+
+create table tweets(
+realTwitterId BIGINT auto_increment primary key,
+APITwitterId BIGINT,
+searchId int,
+userScreenName varchar(100),
+userId BIGINT,
+content varchar(500),
+createAt datetime,
+profileLocationContent varchar(100),
+PlaceLa1 double,
+PlaceLo1 double,
+PlaceLa2 double,
+PlaceLo2 double,
+PlaceLa3 double,
+PlaceLo3 double,
+PlaceLa4 double,
+PlaceLo4 double,
+La0 double,
+Lo0 double,
+city0 varchar(30),
+state0 varchar (30),
+country0 varchar (30),
+index searchId (searchId) using hash,
+index realTwitterId (realTwitterId) using hash,
+index APITwitterId (APITwitterId) using hash
+);
+
+create table algorithm(
+algorithmId int primary key,
+algorithmName varchar(30),
+lastMaxId BIGINT,
+lastDate datetime
+);
+
+insert into algorithm (algorithmId,algorithmName,lastMaxId) values (0,"google",0);

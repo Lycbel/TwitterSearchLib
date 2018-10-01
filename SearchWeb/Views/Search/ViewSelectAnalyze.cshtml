@@ -1,0 +1,74 @@
+﻿
+@{
+
+    ViewBag.Title = "ViewSelectAnalyze";
+    List<List<String>> data = ViewBag.data;
+
+
+
+    String s ="["+ getString0(data[0]);
+
+    for (int i = 1; i < data.Count; i++)
+
+    {
+        s += "," + getString1(data[i]);
+    }
+    s += "]";
+}
+@functions{
+    public String getString0(List<String>
+       li)
+    {
+        String s = "['" + li[0] + "'";
+
+        for (int i = 1; i < li.Count; i++)
+        {
+            s += ",'" + li[i] + "'";
+        }
+        s += "]";
+        return s;
+    }
+    public String getString1(List<String>
+        li)
+    {
+        String s = "['" + li[0] + "'";
+
+        for (int i = 1; i < li.Count; i++)
+        {
+            s += "," + li[i];
+        }
+        s += "]";
+        return s;
+    }
+
+            }
+
+        <html>
+        <head>
+            <script type='text/javascript' src="/Scripts/source/loader.js"> </script>
+            <script type="text/javascript">
+                google.charts.load('current', { 'packages': ['corechart'] });
+                google.charts.setOnLoadCallback(drawChart);
+
+                function drawChart() {
+                    var data = google.visualization.arrayToDataTable(
+                        @{WriteLiteral(s);}
+                    );
+
+                    var options = {
+                        title: 'Twitter -  Date',
+                        curveType: 'function',
+                        legend: { position: 'top' }
+                    };
+
+                    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+                    chart.draw(data, options);
+                }
+            </script>
+        </head>
+        <body>
+
+            <div id="curve_chart" style="width: 2800px; height: 1500px"></div>
+        </body>
+    </html>

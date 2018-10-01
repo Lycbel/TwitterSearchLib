@@ -1,0 +1,489 @@
+﻿
+@{
+    ViewBag.Title = "AnalyzeDemo";
+}
+@using TwitterSearch
+
+@{
+    int Searchcount = 0;
+    var mm = System.Web.HttpContext.Current.Application["demo"];
+    DemoI nn = (DemoI)mm;
+
+    int i = 0;
+    String SearchList = "";
+    foreach (TwitterSearchI s in nn.getRunningSearches())
+    {
+
+        if (s.searchInfomation.finishedLastTwitterDate != null)
+        {
+
+            i++;
+            String m = "optionText" + s.searchInfomation.searchId;
+            SearchList += (" <li>") +
+    ("<input type=\"checkbox\" class=\"searchesClass\" id=\"option" + i + "\"  value=\"" + s.searchInfomation.searchId + "\" " + " name=\"searchSelector+" + s.searchInfomation.searchId + "\" onchange = \"checkNumber(this)\">") +
+    ("<label id=\"" + m + "\">" + HttpContext.Current.Server.HtmlEncode(s.searchInfomation.searchTitle) + "&nbsp;&nbsp;&nbsp;Date Range" + s.searchInfomation.firstTwitterDate.ToString() + "-------" + s.loadLatestLocationEffectiveDate(s, 0).ToString() + "</label>") + ("</li>");
+        }
+    }
+
+    Searchcount = i;
+    if (Searchcount == 0)
+    {
+        SearchList = "No search avialable. Maybe no search is running. Or no search finished at least one cycle!";
+    }
+
+}
+<head>
+    <link rel="stylesheet" type="text/css" href="/Scripts/source/jquery-ui.css" />
+    <style>
+        #slider-range {
+            width: 365px;
+        }
+
+        #slider-range, #time {
+            margin: 10px;
+            display: block;
+        }
+
+        #SearchList {
+            display: block !important;
+        }
+
+        .elements {
+            position: absolute;
+        }
+
+        .ghost-select {
+            display: none;
+            z-index: 9000;
+            position: absolute !important;
+            cursor: default !important;
+        }
+
+        .ghost-active {
+            display: block !important;
+        }
+
+        .ghost-select > span {
+            background-color: rgba(239, 28, 190, 0.6);
+            border: 1px solid #b20e8c;
+            width: 100%;
+            height: 100%;
+            float: left;
+        }
+    </style>
+    <script type='text/javascript' src="/Scripts/source/loader.js"> </script>
+    <script src="/Scripts/source/jquery.min.js" type="text/javascript"></script>
+    <script src="/Scripts/source/jquery-ui.min.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        searchCount = @{WriteLiteral(Searchcount); };
+        var laMap = [ [948.960209923313,20],[888.5867774140471,22.5],[827.1116468565186,25],[764.3721601117994,27.5],[700.1904168031532,30],[634.3702380743622,32.5],[566.6935003184645,35],[496.9156570934011,37.5],[424.760206098792,40],[349.9117714064645,42.5],[272.00734678804196,45],[190.62506457129638,47.5],[105.26958479931217,50]];
+        var dataFromChart; // [la,lo,searchcolor],.......,[[yearmonth,intervaloffset],....],[interval,pixel]
+        var searchIds;
+        var timeIntervalSize = 0;
+        var dateMap = [];
+        var timeIntervalPixels = 0;
+        var xoffs = [-1,-1];
+        var yoffs = [-1,-1];
+
+        count = 0;  //how many searches are selected
+        sccount = 5;
+        colors = ['green', 'pink','red','yellow', 'purple','blue','pink','orange'];
+        var options = {
+            region: 'US',
+            displayMode: 'markers',
+            colorAxis: {values:[0,1,2,3,4]},
+            colorAxis: {colors: ['green', 'pink','red','yellow', 'purple']},
+            sizeAxis: {minValue: 1,  maxValue: 1},
+            sizeAxis: { minSize: 1 , maxSize: 1},
+            resolution: 'provinces',
+            enableRegionInteractivity: false,
+            legend : false,
+
+            keepAspectRatio: true
+        };
+        google.charts.load('current', {'packages': ['geochart'],'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'});
+
+        function drawMarkersMap() {
+            if(dataFromChart.length<=0){
+                return;
+            }
+            google.charts.setOnLoadCallback(drawMap);
+
+            function drawMap(){
+                chart = new google.visualization.GeoChart(document.getElementById('chart_div'));
+                chart.clearChart();
+                google.visualization.events.addListener(chart, 'ready', function() {
+                    allowDisabled();
+                });
+                dataFromChart.unshift(['La','Long','colorNumber']);
+                var data = google.visualization.arrayToDataTable(dataFromChart);
+                setDisable();
+                chart.draw(data, options);
+            }
+        }
+
+        function checkNumber(e)//when select check box to check is it more than limitation
+        {
+            if (e)
+            {
+                if (e.checked)
+                {
+                    if(count <= 4){
+                        count++;
+                    }else{
+                        e.checked = false;
+                        alert("no more than 5 search selected");
+                    }
+                }
+                else{
+                    count--;
+                }
+            }
+        }
+        var dataToServer ;
+        //year,month,day,hour,year,month,day,hour,searchId,colorId....
+        var onclickSearchSelectFinished = false;
+        function onclickSearchSelect()
+        {
+
+            onclickSearchSelectFinished = false;
+            timeIntervalSize = 0;
+            dateMap = [];
+            timeIntervalPixels = 0;
+            var searcheMapIndex  ;
+            dataToServer = ["-1","-1","-1","-1","-1","-1","-1","-1"];
+            i = 0;
+            var opNumber=[];
+            var opColor =[] ;
+            for( j =1; j<=searchCount;j++)
+            {
+                m = document.getElementById("option"+j);
+                document.getElementById("optionText"+m.value).style.color = "black";
+                if(m.checked){
+                    opNumber[i]=i;
+                    opColor[i]=(colors[i]);
+                    dataToServer[8+i*2] =m.value;
+                    dataToServer[8+i*2+1] =i;
+                    document.getElementById("optionText"+m.value).style.color = colors[i];
+                    i++;
+                }
+
+            }
+            if(i==0){
+                alert("need to select at least one search!");
+                return;
+            }
+            options.colorAxis.colors=opColor;
+            options.colorAxis.values=opNumber;
+            ids = dataToServer;
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ajaxTweets","search" )' , // the method we are calling
+                contentType: "application/json",
+                async: false,
+                data:  JSON.stringify( {ids : ids}) ,
+                traditional: true,
+                // dataType: "application/json",
+                success: function (result) {
+                    if(result!=null&&result.length!=0){
+                        dataFromChart = result[0];
+                        timeIntervalSize =result[2][0];
+                        timeIntervalPixels = result[2][1];
+                        dateMap = result[1];
+                        // alert(dateMap);
+                    }
+                },
+                error: function (result) {
+                    alert('Oh no :(');
+                }
+            });
+            drawMarkersMap();
+            timeshow();
+            onclickSearchSelectFinished = true;
+
+        }
+
+        function onClickConfirm()
+        {
+            if( !onclickSearchSelectFinished )
+                return;
+            var val0 = $("#slider-range").slider("values", 0),
+                   val1 = $("#slider-range").slider("values", 1);
+            var time1 = findDate(dateMap,val0);
+            var time2 = findDate(dateMap,val1);
+            for(var j = 0;j<4;j++){
+                dataToServer[j] = time1[j];
+            }
+            for(var j = 4;j<8;j++){
+                dataToServer[j] = time2[j-4];
+            }
+            dataFromChart = [];
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ajaxTweets","search" )' , // the method we are calling
+                contentType: "application/json",
+                async: false,
+                data:  JSON.stringify( {ids :  dataToServer}) ,
+                traditional: true,
+                // dataType: "application/json",
+                success: function (result) {
+                    if(result!=null&&result.length!=0){
+                        dataFromChart = result[0];
+
+                    }
+                },
+                error: function (result) {
+                    alert('Oh no :(');
+                }
+            });
+            drawMarkersMap();
+        }
+
+        function timeshow(){
+            $("#slider-range").css('width',timeIntervalPixels);
+            $("#slider-range").slider({
+                range: true,
+                min: 0,
+                max: timeIntervalSize,
+                values: [0, timeIntervalSize],
+                slide: slideTime
+            });
+
+            function slideTime(event, ui){
+                var val0 = $("#slider-range").slider("values", 0),
+                    val1 = $("#slider-range").slider("values", 1);
+                var time1 = findDate(dateMap,val0);
+                var time2 = findDate(dateMap,val1);
+                $("#time").text(time1 + ' - ' + time2);
+            }
+        }
+        function findDate(dMap,offset){
+            var ymdh = [0,0,0,0];
+            var hOfm = 24 * 31;
+            var start = Math.floor(offset/hOfm);
+            if(start<0){
+                start = 0;
+            }
+            //alert(dMap.length + dMap[1]);
+            for(;start<dMap.length;start++){
+                if(dMap[start][2]>offset){
+
+                    var tempMap = dMap[start-1];
+                    //alert(tempMap + " before" + dMap[start-2] + "start " + start)
+                    var startOffset = offset - tempMap[2];
+                    var tyear = tempMap[0];
+                    var tmonth = tempMap[1];
+                    var thour = parseInt(startOffset % (24), 10);
+                    var tday =Math.floor( startOffset/24 +1);
+                    ymdh[0]=tyear;
+                    ymdh[1]=tmonth;
+                    ymdh[2]=tday;
+                    ymdh[3]=thour;
+                    return ymdh;
+                }
+            }
+            return yearMonth;
+        }
+        //get latitude long of offset function
+
+        //select part
+        var dataToServerSelect ;
+
+        jQuery(function($){
+            $("#chart_div").mousedown(function (e) {
+                xoffs[0] = e.offsetX;
+                yoffs[0] = e.offsetY;
+                $("#chart_div").append("<div class=\"ghost-select\"><span></span></div>")
+                $("#big-ghost").remove();
+                $(".ghost-select").addClass("ghost-active");
+                $(".ghost-select").css({
+                    'left': e.pageX,
+                    'top': e.pageY
+                });
+
+                initialW = e.pageX;
+                initialH = e.pageY;
+
+                // $('#chart_div').bind("mouseup", selectElements);
+                $('#chart_div').bind("mousemove", openSelector);
+
+            });
+            $("#chart_div").mouseup(function (e) {
+                $('#chart_div').unbind("mousemove", openSelector);
+                xoffs[1] =xoffs[0]+ e.offsetX;
+                yoffs[1] =  yoffs[0]+e.offsetY;
+                finishSelection(xoffs,yoffs);
+                $(".ghost-select").removeClass("ghost-active");
+                $(".ghost-select").width(0).height(0);
+            });
+
+        });
+        function finishSelection(xoffs,yoffs){
+            // alert(yoffs + " " + xoffs);
+            if(! checkSelectedArea(xoffs,yoffs)){
+                return;
+            }
+
+            var LaLotemp = convertLaLo(xoffs,yoffs);
+            /// alert(yoffs + " " + xoffs + "\n" + LaLotemp);
+            if (confirm("are u sure?") != true) {
+                return;
+            }
+            var dataLaLotemp = LaLotemp[0][0] + "#" + LaLotemp[0][1] + "#" + LaLotemp[1][0] + "#" + LaLotemp[1][1];
+            var dataSearchList = '';
+            var val0 = $("#slider-range").slider("values", 0),
+              val1 = $("#slider-range").slider("values", 1);
+            var time1 = findDate(dateMap,val0);
+            var time2 = findDate(dateMap,val1);
+            var dataDates = time1[0];
+            for(var j = 1;j<4;j++){
+                dataDates += '#' + time1[j] ;
+            }
+            for(var j = 0;j<4;j++){
+                dataDates += '#' + time2[j] ;
+            }
+            leng = (dataToServer.length - 8)/2;
+            dataSearchList += dataToServer[8];
+            for(var i =1;i< leng;i++){
+                dataSearchList += '#' + dataToServer[8 + 2*i ];
+            }
+            $('#dataSearchList').attr("value",dataSearchList);
+            $('#dataDates').attr("value",dataDates);
+            $('#dataLalos').attr("value",dataLaLotemp);
+            document.analyzeForm.submit();
+
+        }
+
+        function convertLaLo(xoffs,yoffs){
+            var resultxys = [];
+            var scale = $('#chart_div').width()/1500;
+            d00 = getLang(yoffs[0]/scale);
+            d01 = getLong(xoffs[0]/scale);
+            d10 = getLang(yoffs[1]/scale);
+            d11 = getLong(xoffs[1]/scale);
+            resultxys.push([d00,d01]);
+            resultxys.push([d10,d11]);
+            return resultxys;
+        }
+        function getLong(xoff){
+            return 4 * xoff / 90.86 - 128.003;
+        }
+        function getLang(yoff){
+            for(var i = 0 ;i <laMap.length;i++ ){
+                if(laMap[i][0]<yoff){
+
+                    var temp = laMap[i-1][1] + (yoff - laMap[i-1][0])*(laMap[i-1][1]-laMap[i][1])/(laMap[i-1][0]-laMap[i][0]);
+                    // alert(yoff+ " " + i+ "temp" + temp);
+                    return temp;
+                }
+            }
+        }
+        function checkSelectedArea(xoffs,yoffs){
+            if(xoffs.length<2||yoffs.length<2){
+
+                return false;
+            }
+            var scale = $('#chart_div').width()/1500;
+            for(var i = 0;i<2;i++){
+                if(xoffs[i]/scale<45.5||xoffs[i]/scale>1396.36||yoffs[i]/scale<105.27||yoffs[i]/scale>948.96){
+
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function selectElements(e) {
+
+            $('#chart_div').unbind("mousemove", openSelector);
+            $('#chart_div').unbind("mouseup", selectElements);
+            xoffs[1] = e.offsetX;
+            yoffs[1] = e.offsetY;
+            finishSelection(xoffs,yoffs);
+            $(".ghost-select").removeClass("ghost-active");
+            $(".ghost-select").width(0).height(0);
+
+
+        }
+
+        function openSelector(e) {
+            var w = Math.abs(initialW - e.pageX);
+            var h = Math.abs(initialH - e.pageY);
+
+            $(".ghost-select").css({
+                'width': w,
+                'height': h
+            });
+            if (e.pageX <= initialW && e.pageY >= initialH) {
+                $(".ghost-select").css({
+                    'left': e.pageX
+                });
+            } else if (e.pageY <= initialH && e.pageX >= initialW) {
+                $(".ghost-select").css({
+                    'top': e.pageY
+                });
+            } else if (e.pageY < initialH && e.pageX < initialW) {
+                $(".ghost-select").css({
+                    'left': e.pageX,
+                    "top": e.pageY
+                });
+            }
+        }
+
+
+
+        function setDisable(){
+            $("#b1").attr('disabled','true');
+            $("#b2").attr('disabled','true');
+
+            $('.searchesClass').attr('disabled','true');
+        }
+        function allowDisabled(){
+            $("#b1").removeAttr('disabled');
+            $("#b2").removeAttr('disabled');
+
+            $('.searchesClass').removeAttr('disabled');
+        }
+
+
+    </script>
+
+    <style>
+        circle {
+            stroke-width: 0px;
+        }
+
+        #map_canvas path {
+            stroke-width: 1; /* control the countries borders width */
+            stroke: #6699cc; /* choose a color for the border */
+        }
+    </style>
+
+</head>
+<body>
+    <h2>AnalyzeDemo</h2>
+
+    <ul id="SearchList">
+        @{WriteLiteral(SearchList);}
+    </ul>
+
+    <input type="button" id="b1" value="Searchconfirm" onclick="onclickSearchSelect()" />
+
+    <p id="list"></p>
+    <div id="chart_div" style="width: 3000px ; height: 2000px ">
+        <div class="ghost-select"><span></span></div>
+    </div>
+    <div style="display:block;  float: left; ">
+        <div id="slider-range"></div>
+        <span id="time" style="display:block;"></span>
+        <input type="button" id="b2" value="confirm Time Selection" onclick="onClickConfirm()" />
+    </div>
+    <form id="analyzeForm" name="analyzeForm" hidden="hidden" action="/search/viewSelectAnalyze" method="post" target="_blank">
+        <input type="hidden" id="dataSearchList" name="searchList" value="">
+        <input type="hidden" id="dataDates" name="dates" value="">
+        <input type="hidden" id="dataLalos" name="laLos" value="">
+    </form>
+
+
+</body>

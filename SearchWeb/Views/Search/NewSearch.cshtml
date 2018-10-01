@@ -1,0 +1,34 @@
+﻿@{
+    Layout = "~/Views/Shared/SearchOut.cshtml";
+}
+@{
+    ViewBag.Title = "NewSearch";
+}
+
+<form id="form1id" name="f" action="/Search/NewSearch" method="post">
+    <p>Please enter the Title: </p><input type="text" name="searchTitle"/>
+    <br/>
+    <p>Please make sure each line contains one criteria</p>
+    <div id="Options" width="400px">
+        <div id="includeOptions" style="width:50%">
+            <label>Include:</label>
+            <br/>
+            <textarea rows="10" cols="20" name="include" id="exclude" class="NtexeArea"></textarea>
+        </div>
+        <div id="excludeOptions" style="width:50%">
+
+            <label>Exclude:</label>
+            <br/>
+            <textarea rows="10" cols="20" name="exclude" id="exclude" class="NtexeArea"></textarea>
+        </div>
+    </div>
+    <input type="hidden" name="back" value="back">
+    <input type="button" name="sub" value="submit" onclick="checkValidate()" />
+    <script>
+        function checkValidate() {
+            
+            document.f.submit();
+        }
+    </script>
+
+</form>

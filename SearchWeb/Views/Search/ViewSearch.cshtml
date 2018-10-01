@@ -1,0 +1,50 @@
+﻿@{
+    Layout = "~/Views/Shared/SearchOut.cshtml";
+}
+@{
+    ViewBag.Title = "ViewSearch";
+}
+@using TwitterSearch;
+@{ 
+   
+    
+    TwitterSearchI ts = ViewBag.ts;
+
+}
+<body >
+    <div style="font-size:20px;">
+        <label>Title:&nbsp;&nbsp;&nbsp; @{if (ts != null) { Write(ts.searchInfomation.searchTitle); } }</label>
+
+        <div>
+            <label>Incldue:</label>
+            <br>
+            @{
+                foreach (String s in ts.searchInfomation.include)
+                {
+
+                    WriteLiteral(s + " ");
+                }
+            }
+        </div>
+        <div>
+            <label>exclude:</label>
+            <br>
+            @{
+                foreach (String s in ts.searchInfomation.exclude)
+                {
+                    WriteLiteral(s + " ");
+                }
+            }
+        </div>
+
+        <label>Start date: @{Write(ts.searchInfomation.startDate.ToString());}</label>
+        </br>
+        <label>FirstTweet's date: @{Write(ts.searchInfomation.firstTwitterDate.ToString());}</label>
+        </br>
+        <label>LastTweet's date: @{Write(ts.searchInfomation.finishedLastTwitterDate.ToString());}</label>
+        </br>
+        <label>Location Finished LastTweet's date: @{Write(ts.loadLatestLocationEffectiveDate(ts,0));}</label>
+        </br>
+        @Html.ActionLink("Go back Demo", "Result", "Search", new { SerachId = ViewBag.searchId }, null)
+    </div>
+</body>
